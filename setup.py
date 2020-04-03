@@ -13,6 +13,7 @@ with open(os.path.join(this_directory, 'README.rst'), encoding='utf-8') as f:
 setup(name='pylatlon',
       version=version,
       description='Tools to handle geographic positions (parsing, gui input)',
+      long_description=long_description,
       long_description_content_type='text/x-rst',
       url='https://github.com/MarineDataTools/pylatlon',
       author='Peter Holtermann',
@@ -20,9 +21,8 @@ setup(name='pylatlon',
       license='GPLv03',
       packages=['pylatlon'],
       scripts = [],
-      entry_points={},
+      entry_points={'console_scripts': ['pylatlon=pylatlon.pylatlon_gui:main']},
       install_requires=[ 'pyproj'],
       package_data = {'':['VERSION']},
+      ython_requires='>=3.4',
       zip_safe=False)
-
-

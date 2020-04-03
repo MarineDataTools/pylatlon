@@ -256,12 +256,10 @@ class latlon(object):
 
         return latlon(lon,lat)
 
-
-
     def __add__(self, other):
         """
         """
-        [lon,lat] = geod.fwd(self.lon,self.lat,other.azimuth)
+        [lon,lat] = geod.fwd(self.lon,self.lat,other.azimuth,other.distance)
         pos = latlon(lon,lat)
         return pos
 
