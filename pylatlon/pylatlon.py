@@ -15,6 +15,12 @@ with open(version_file) as version_f:
 
 geod = pyproj.Geod(ellps='WGS84')
 
+formats = []
+formats.append('%dlat %dlon')
+formats.append('%dlat%NS %dlon%EW')
+formats.append("%dlat%*%mlat%*%NS %dlon%*%mlon%*%EW")
+formats.append("%dlat%? %mlat%? %sec%?%NS %dlon%? %mlon%? %slon%?%EW")
+
 class dlatlon(object):
     """ A delta position object
     """
@@ -100,7 +106,7 @@ class latlon(object):
         %dlon, %dlat: Degrees (either negative, positive, or with extension %NS %EW)
         %mlon, %mlat: Minutes
         %slon, %slat: Seconds
-        %EW, %NS:
+        %EW, %NS: Easting, Northing
         %?:
         %*:
 
@@ -109,11 +115,6 @@ class latlon(object):
         ind_pos = []
         #integer https://stackoverflow.com/questions/8586346/python-regex-for-integer
         #
-        if False:
-            regex_int = '([-+]?[0-9]+)'
-            #regex_int = '[0-9]+'
-            #regex_int = 'd+'
-        #format += ' ' # A white space in the end, making find easier
         regex_format = format[:]
 
         # Replace anychar with regex version
@@ -175,19 +176,23 @@ class latlon(object):
             regex_format = regex_format.replace('%NS',regex_NS)
 
         print('regex_format','"' + regex_format + '"')
-        print('A')
-        searchObj = re.search(regex_format,pstr)
-        print(searchObj)
-        print('B')
-        searchObj = re.findall(regex_format,pstr)
-        print(searchObj)
-        print('C')
+        #print('A')
+        #searchObj = re.search(regex_format,pstr)
+        #print(searchObj)
+        #print('B')
+        #searchObj = re.findall(regex_format,pstr)
+        #print(searchObj)
+        #print('C')
         searchObj = re.match(regex_format,pstr)
-        print('Match',searchObj)
-        print('Group',searchObj.group(1))
-        print('Group',searchObj.group(2))
-        print('Group',searchObj.groupdict())
-        parse_dict = searchObj.groupdict()
+        #print('Match',searchObj)
+        #print('Group',searchObj.group(1))
+        #print('Group',searchObj.group(2))
+        #print('Group',searchObj.groupdict())
+        try:
+            parse_dict = searchObj.groupdict()
+        except Exception as e:
+            logger.warning('Parsing failed:' + str(e))
+            return None
         # Checking first if we have degrees
         try:
             lat = float(parse_dict['dlat'])
