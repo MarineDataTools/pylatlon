@@ -44,6 +44,51 @@ class MapCanvas(FigureCanvas):
         #self.axes.set_title('pylatlon')
 
 
+class latlonWidget(QtWidgets.QWidget):
+    def __init__(self,latlon=None):
+        self.latlon = latlon
+        QtWidgets.QWidget.__init__(self)
+        layout = QtWidgets.QVBoxLayout(self)
+        self.postab = QtWidgets.QTableWidget()
+        self.postab.setRowCount(6)
+        self.postab.setColumnCount(6)
+        self.postab.setItem(1,2, QtWidgets.QTableWidgetItem("Table Cell"))
+        self.postab.horizontalHeader().setVisible(False)
+        self.postab.verticalHeader().setVisible(False)
+        layout.addWidget(self.postab)
+        # Decimal degree
+        #declayout = QtWidgets.QGridLayout(self)
+        #declayout.addWidget(QtWidgets.QLabel('Dec. Latitude'),0,0)
+        #declayout.addWidget(QtWidgets.QLabel('Dec. Longitude'),0,1)
+        #self.dlon = QtWidgets.QLabel('?')
+        #self.dlat = QtWidgets.QLabel('?')
+        #declayout.addWidget(self.dlat,1,0)
+        #declayout.addWidget(self.dlon,1,1)
+        #layout.addLayout(declayout)
+    def update_position(self,latlon):
+        self.latlon = latlon
+        dlonstr = '{:3.5f}'.format(self.latlon.lon)
+        dlatstr = '{:2.5f}'.format(self.latlon.lat)
+        lonstr = '{:3d}'.format(self.latlon.degrees_lon)
+        latstr = '{:2d}'.format(self.latlon.degrees_lat)
+        dmlonstr = '{:3f}'.format(self.latlon.dminutes_lon)
+        dmlatstr = '{:2f}'.format(self.latlon.dminutes_lat)
+        print(dlonstr)
+        # decimal degree
+        self.postab.setItem(1,0, QtWidgets.QTableWidgetItem(dlatstr))
+        self.postab.setItem(1,1, QtWidgets.QTableWidgetItem(self.latlon.northing))
+        self.postab.setItem(1,2, QtWidgets.QTableWidgetItem(dlonstr))
+        # degree decimal minutes
+        self.postab.setItem(3,0, QtWidgets.QTableWidgetItem(latstr))
+        self.postab.setItem(3,1, QtWidgets.QTableWidgetItem(dmlatstr))
+        self.postab.setItem(3,2, QtWidgets.QTableWidgetItem(self.latlon.northing))
+        self.postab.setItem(3,3, QtWidgets.QTableWidgetItem(lonstr))
+        self.postab.setItem(3,4, QtWidgets.QTableWidgetItem(dmlonstr))
+        self.postab.setItem(3,5, QtWidgets.QTableWidgetItem(self.latlon.easting))
+        # degree minutes seconds
+        self.postab.setItem(5,0, QtWidgets.QTableWidgetItem(lonstr))
+        self.postab.setItem(5,2, QtWidgets.QTableWidgetItem(latstr))
+
 class pylatlonWidget(QtWidgets.QWidget):
     def __init__(self,logging_level=logging.INFO):
         QtWidgets.QWidget.__init__(self)
@@ -63,6 +108,8 @@ class pylatlonWidget(QtWidgets.QWidget):
 
 
         self.input1 = QtWidgets.QLineEdit()
+        self.input1.example = False # Custom state
+        self.input1.textChanged.connect(self.input_changed)
         #self.format1 = QtWidgets.QLineEdit()
         self.format1_combo = QtWidgets.QComboBox()
         self.format1_combo.currentIndexChanged.connect(self.custom_format)
@@ -77,19 +124,44 @@ class pylatlonWidget(QtWidgets.QWidget):
         self.format_layout.addRow("Format",self.format1_combo)
 
         # Add the latlon object
-        self.latlabel = QtWidgets.QLabel('Latitude: ?')
-        self.lonlabel = QtWidgets.QLabel('Longitude: ?')
-        self.layout.addWidget(QtWidgets.QLabel('Position parsed'),1,0)
-        self.layout.addWidget(self.latlabel,1,1)
-        self.layout.addWidget(self.lonlabel,1,2)
+        self.latlon1 = latlonWidget()
+        self.layout.addWidget(self.latlon1,1,0,1,4)
+        #self.latlabel = QtWidgets.QLabel('Latitude: ?')
+        #self.lonlabel = QtWidgets.QLabel('Longitude: ?')
+        #self.layout.addWidget(QtWidgets.QLabel('Position parsed'),1,0)
+        #self.layout.addWidget(self.latlabel,1,1)
+        #self.layout.addWidget(self.lonlabel,1,2)
         # The map to show the position
         self.map = MapCanvas(self,width=5, height=4)
         self.map_toolbar = NavigationToolbar(self.map,self)
         self.layout.addWidget(self.map,3,0,1,4)
         self.layout.addWidget(self.map_toolbar,4,0,1,4)
 
+    def input_changed(self):
+        print('Input changed')
+        #style = self.input1.getStyleSheet()
+        #print(style)
+        s = self.sender()
+        input_str = self.input1.text()
+        ind = self.format1_combo.currentIndex()
+        example_str = pylatlon.formats_examples[ind]
+        if(input_str == example_str):
+            pass
+        else: # User input, change to black
+            self.input1.example = False
+            self.input1.setStyleSheet("color: rgb(0, 0, 0);")
     def custom_format(self):
         s = self.sender()
+        # Check if we haae an input string, if not, add an example
+        input_str = self.input1.text()
+        if((len(input_str) == 0)or (self.input1.example == True)):
+            print('Adding an example')
+            ind = s.currentIndex()
+            example_str = pylatlon.formats_examples[ind]
+            self.input1.setText(example_str)
+            self.input1.setStyleSheet("color: rgb(255, 0, 0);")
+            self.input1.example = True
+
         if(s.currentText()== 'Custom'):
             print('Adding custom format')
             text, ok = QtWidgets.QInputDialog.getText(self, 'Custom format input', 'Enter custom format:')
@@ -100,16 +172,15 @@ class pylatlonWidget(QtWidgets.QWidget):
         print('Parse')
         format = self.format1_combo.currentText()
         if(format == 'Custom'):
-            format = self.format1
+            return
 
 
         parse_string = self.input1.text()
         print('Parsing:' + parse_string + ' with format' + format)
         pos = pylatlon.latlon.strp(parse_string,format)
+        self.latlon1.update_position(pos)
         if(pos is not None):
-            self.latlabel.setText('Latitude: ' + str(pos.dlat))
-            self.lonlabel.setText('Longitude: ' + str(pos.dlon))
-            self.map.plot(pos.dlon,pos.dlat)
+            self.map.plot(pos.lon,pos.lat)
             self.map.draw()
 
 

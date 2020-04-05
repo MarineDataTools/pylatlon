@@ -14,12 +14,19 @@ with open(version_file) as version_f:
    version = version_f.read().strip()
 
 geod = pyproj.Geod(ellps='WGS84')
-
+formats_examples = []
 formats = []
 formats.append('%dlat %dlon')
+formats_examples.append("-10.3 20.4")
 formats.append('%dlat%NS %dlon%EW')
-formats.append("%dlat%*%mlat%*%NS %dlon%*%mlon%*%EW")
-formats.append("%dlat%? %mlat%? %sec%?%NS %dlon%? %mlon%? %slon%?%EW")
+formats_examples.append('20.3N 20.4E')
+formats.append("%dlat%?%mlat%?%NS %dlon%?%mlon%?%EW")
+formats_examples.append("17°30'N 20°45E")
+formats.append("%dlat%NS%mlat%*S %dlon%EW%mlon%")
+formats_examples.append("20S30' 70E42.3'")
+formats.append("%dlat%?%mlat%?%slat%?%NS %dlon%?%mlon%?%slon%?%EW")
+formats_examples.append("""54°30'47"N 20°42'3"E""")
+
 
 class dlatlon(object):
     """ A delta position object
@@ -33,11 +40,11 @@ class latlon(object):
     """ A position object
     """
     def __init__(self, lon, lat):
-        self.dlon = lon
-        self.dlat = lat
+        self.lon = lon
+        self.lat = lat
         dms = self.calc_dms(lon,lat)
-        self.lon = dms['deg_lon']
-        self.lat = dms['deg_lat']
+        self.degrees_lon = dms['deg_lon']
+        self.degrees_lat = dms['deg_lat']
         #self.dlon = dms['lon']
         #self.dlat = dms['lat']
         self.minutes_lon = dms['min_lon']
@@ -49,6 +56,44 @@ class latlon(object):
         self.easting = dms['EW']
         self.northing = dms['NS']
         print(dms)
+    def set_degrees_lon(self,degrees):
+        self.degrees_lon = degrees
+        self.calc_latlon()
+    def set_degrees_lat(self,degrees):
+        self.degrees_lat = degrees
+        self.calc_latlat()
+    def set_minutes_lon(self,minutes):
+        self.minutes_lon = minutes
+        self.calc_latlon()
+    def set_minutes_lat(self,minutes):
+        self.minutes_lat = minutes
+        self.calc_latlon()
+    def set_seconds_lon(self,seconds):
+        self.seconds_lon = seconds
+        self.calc_latlon()
+    def set_seconds_lat(self,seconds):
+        self.seconds_lat = seconds
+        self.calc_latlon()
+
+    def set_easting(self,easting):
+        self.easting = easting
+        self.calc_latlon()
+
+    def set_northing(self,northing):
+        self.northing = northing
+        self.calc_latlon()
+
+    def calc_latlon(self):
+        """ Calculates decimal degrees from degrees,minutes,seaconds and easting/northing
+        """
+        lon = self.degrees_lon + self.minutes_lon/60 + self.seconds_lon/3600
+        if(self.easting == 'W'):
+            self.lon = -lon
+
+        lat = self.degrees_lat + self.minutes_lat/60 + self.seconds_lat/3600
+        if(self.easting == 'S'):
+            self.lat = -lat
+
     def calc_dms(self,lon,lat):
         """ Calculate degrees, minutes, seconds, east, west, north south out of
         floating point longitude and latitude.
@@ -59,9 +104,9 @@ class latlon(object):
         dms['deg_lat']   = int(lat)
         dms['deg_lon']   = int(lon)
         # Minutes
-        dms['dmin_lon'] = (lon - int(lon))*60
+        dms['dmin_lon'] = abs((lon - int(lon))*60)
         dms['min_lon']  = int(dms['dmin_lon'])
-        dms['dmin_lat'] = (lat - int(lat)) * 60
+        dms['dmin_lat'] = abs((lat - int(lat)) * 60)
         dms['min_lat']  = int(dms['dmin_lat'])
         # Seconds
         dms['sec_lat']  = (dms['dmin_lat'] - dms['min_lat']) * 60
@@ -128,39 +173,40 @@ class latlon(object):
         ind_dlon = format.find('%dlon')
         if(ind_dlon > -1):
             print('ind_dlon',ind_dlon)
-            regex_dlon = r'(?P<dlon>[-+]?(\d+[.,]?\d+))'
+            #regex_dlon = r'(?P<dlon>[-+]?(\d+[.,]?\d+))'
+            regex_dlon = r'(?P<dlon>[-+]?(\d+[.,]?\d?))'
             regex_format = regex_format.replace('%dlon',regex_dlon)
 
         ind_dlat = format.find('%dlat')
         if(ind_dlat > -1):
             print('ind_dat',ind_dlat)
-            regex_dlat = r'(?P<dlat>[-+]?(\d+[.,]?\d+))'
+            regex_dlat = r'(?P<dlat>[-+]?(\d+[.,]?\d?))'
             regex_format = regex_format.replace('%dlat',regex_dlat)
 
         # Minutes
         ind_mlon = format.find('%mlon')
         if(ind_mlon > -1):
             print('ind_mlon',ind_mlon)
-            regex_mlon = r'(?P<mlon>[-+]?(\d+[.,]?\d+))'
+            regex_mlon = r'(?P<mlon>[-+]?(\d+[.,]?\d?))'
             regex_format = regex_format.replace('%mlon',regex_mlon)
 
         ind_mlat = format.find('%mlat')
         if(ind_mlat > -1):
             print('ind_dat',ind_mlat)
-            regex_mlat = r'(?P<mlat>[-+]?(\d+[.,]?\d+))'
+            regex_mlat = r'(?P<mlat>[-+]?(\d+[.,]?\d?))'
             regex_format = regex_format.replace('%mlat',regex_mlat)
 
         # Seconds
         ind_slon = format.find('%slon')
         if(ind_slon > -1):
             print('ind_slon',ind_slon)
-            regex_slon = r'(?P<slon>[-+]?(\d+[.,]?\d+))'
+            regex_slon = r'(?P<slon>[-+]?(\d+[.,]?\d?))'
             regex_format = regex_format.replace('%slon',regex_slon)
 
         ind_slat = format.find('%slat')
         if(ind_slat > -1):
             print('ind_dat',ind_slat)
-            regex_slat = r'(?P<slat>[-+]?(\d+[.,]?\d+))'
+            regex_slat = r'(?P<slat>[-+]?(\d+[.,]?\d?))'
             regex_format = regex_format.replace('%slat',regex_slat)
 
         ind_EW = format.find('%EW')
@@ -211,14 +257,14 @@ class latlon(object):
         # Checking for minutes/seconds.
         try:
             mlon = float(parse_dict['mlon'])
-            lon = lon + mlon /60
+            lon = lon + mlon/60
             logger.debug('strp(): Adding minutes (Longitude): ' + str(mlon))
         except:
             pass
 
         try:
             slon = float(parse_dict['slon'])
-            lon = lon + slon /60/60
+            lon = lon + slon/3600
             logger.debug('strp(): Adding seconds (Longitude): ' + str(slon))
         except:
             pass
@@ -226,13 +272,14 @@ class latlon(object):
         try:
             mlat = float(parse_dict['mlat'])
             lat = lat + mlat /60
+            self.set_minutes_lat_lon(mlat)
             logger.debug('strp(): Adding minutes (Latitude): ' + str(mlat))
         except:
             pass
 
         try:
             slat = float(parse_dict['slat'])
-            lat = lat + slat /60/60
+            lat = lat + slat/3600
             logger.debug('strp(): Adding seconds (Latitude): ' + str(slat))
         except:
             pass
@@ -274,3 +321,7 @@ class latlon(object):
         azimuth11, azimuth22, distance = geod.inv(self.lon, self.lat, other.lon, other.lat)
         dpos = dlatlon(distance,azimuth12,azimuth21)
         return dpos
+
+    def __str__(self):
+        retstr = 'Lon: {3.5f}'.format(self.lon) + ' Lat: {2.5f}'.format(self.lat)
+        return reststr
