@@ -174,39 +174,39 @@ class latlon(object):
         if(ind_dlon > -1):
             print('ind_dlon',ind_dlon)
             #regex_dlon = r'(?P<dlon>[-+]?(\d+[.,]?\d+))'
-            regex_dlon = r'(?P<dlon>[-+]?(\d+[.,]?\d?))'
+            regex_dlon = r'(?P<dlon>[-+]?(\d+[.,]?\d*))'
             regex_format = regex_format.replace('%dlon',regex_dlon)
 
         ind_dlat = format.find('%dlat')
         if(ind_dlat > -1):
             print('ind_dat',ind_dlat)
-            regex_dlat = r'(?P<dlat>[-+]?(\d+[.,]?\d?))'
+            regex_dlat = r'(?P<dlat>[-+]?(\d+[.,]?\d*))'
             regex_format = regex_format.replace('%dlat',regex_dlat)
 
         # Minutes
         ind_mlon = format.find('%mlon')
         if(ind_mlon > -1):
             print('ind_mlon',ind_mlon)
-            regex_mlon = r'(?P<mlon>[-+]?(\d+[.,]?\d?))'
+            regex_mlon = r'(?P<mlon>[-+]?(\d+[.,]?\d*))'
             regex_format = regex_format.replace('%mlon',regex_mlon)
 
         ind_mlat = format.find('%mlat')
         if(ind_mlat > -1):
             print('ind_dat',ind_mlat)
-            regex_mlat = r'(?P<mlat>[-+]?(\d+[.,]?\d?))'
+            regex_mlat = r'(?P<mlat>[-+]?(\d+[.,]?\d*))'
             regex_format = regex_format.replace('%mlat',regex_mlat)
 
         # Seconds
         ind_slon = format.find('%slon')
         if(ind_slon > -1):
             print('ind_slon',ind_slon)
-            regex_slon = r'(?P<slon>[-+]?(\d+[.,]?\d?))'
+            regex_slon = r'(?P<slon>[-+]?(\d+[.,]?\d*))'
             regex_format = regex_format.replace('%slon',regex_slon)
 
         ind_slat = format.find('%slat')
         if(ind_slat > -1):
             print('ind_dat',ind_slat)
-            regex_slat = r'(?P<slat>[-+]?(\d+[.,]?\d?))'
+            regex_slat = r'(?P<slat>[-+]?(\d+[.,]?\d*))'
             regex_format = regex_format.replace('%slat',regex_slat)
 
         ind_EW = format.find('%EW')
@@ -323,5 +323,6 @@ class latlon(object):
         return dpos
 
     def __str__(self):
-        retstr = 'Lon: {3.5f}'.format(self.lon) + ' Lat: {2.5f}'.format(self.lat)
-        return reststr
+        #retstr = 'Lon: {3.5f}'.format(self.lon) + ' Lat: {2.5f}'.format(self.lat)
+        retstr = 'Hallo'
+        return retstr
