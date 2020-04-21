@@ -31,10 +31,15 @@ formats_examples.append("""54°30'47"N 20°42'3"E""")
 class dlatlon(object):
     """ A delta position object
     """
-    def __init__(self, distance, azimuth, azimuth_back):
+    def __init__(self, distance, azimuth, azimuth_back=None):
         self.distance = distance
         self.azimuth  = azimuth
         self.azimuth_back  = azimuth_back
+
+    def __str__(self):
+        retstr = 'Distance: {:3.5f} m'.format(self.distance) + ' Azimuth: {:3.1f}'.format(self.azimuth)+ ' Azimuth back: {:3.1f}'.format(self.azimuth_back)
+        #retstr = 'Hallo'
+        return retstr
 
 class latlon(object):
     """ A position object
@@ -156,7 +161,7 @@ class latlon(object):
         %*:
 
         """
-        print(pstr)
+        #print(pstr)
         ind_pos = []
         #integer https://stackoverflow.com/questions/8586346/python-regex-for-integer
         #
@@ -318,11 +323,11 @@ class latlon(object):
     def __sub__(self, other):
         """ Subtracting gives the difference between the two points in m on a WGS84 ellipsoid
         """
-        azimuth11, azimuth22, distance = geod.inv(self.lon, self.lat, other.lon, other.lat)
+        azimuth12, azimuth21, distance = geod.inv(self.lon, self.lat, other.lon, other.lat)
         dpos = dlatlon(distance,azimuth12,azimuth21)
         return dpos
 
     def __str__(self):
-        #retstr = 'Lon: {3.5f}'.format(self.lon) + ' Lat: {2.5f}'.format(self.lat)
-        retstr = 'Hallo'
+        retstr = 'Lon: {:3.5f}'.format(self.lon) + ' Lat: {:2.5f}'.format(self.lat)
+        #retstr = 'Hallo'
         return retstr
