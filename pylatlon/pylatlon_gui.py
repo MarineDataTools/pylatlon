@@ -34,12 +34,17 @@ class MapCanvas(FigureCanvas):
         FigureCanvas.updateGeometry(self)
         self.plot()
 
-    def plot(self,lon=None,lat=None):
+    def plot(self,lon=None,lat=None,lon2=None,lat2=None):
         self.axes.cla()
         self.axes.set_global()
         self.axes.coastlines()
         if(lon is not None):
+            print('Pos1 plot',lon,lat)
             self.axes.plot([lon],[lat],'or',transform=ccrs.PlateCarree())
+
+        if(lon2 is not None):
+            print('Pos2 plot',lon,lat)
+            self.axes.plot([lon2],[lat2],'og',transform=ccrs.PlateCarree())
 
         #self.axes.set_title('pylatlon')
 
@@ -49,13 +54,26 @@ class latlonWidget(QtWidgets.QWidget):
         self.latlon = latlon
         QtWidgets.QWidget.__init__(self)
         layout = QtWidgets.QVBoxLayout(self)
+        # A table containing the first position
         self.postab = QtWidgets.QTableWidget()
         self.postab.setRowCount(6)
         self.postab.setColumnCount(8)
-        self.postab.setItem(1,2, QtWidgets.QTableWidgetItem("Table Cell"))
+        #self.postab.setItem(1,2, QtWidgets.QTableWidgetItem("Table Cell"))
         self.postab.horizontalHeader().setVisible(False)
         self.postab.verticalHeader().setVisible(False)
-        layout.addWidget(self.postab)
+
+        # A table containing the first position
+        self.pos2tab = QtWidgets.QTableWidget()
+        self.pos2tab.setRowCount(6)
+        self.pos2tab.setColumnCount(8)
+        #self.postab.setItem(1,2, QtWidgets.QTableWidgetItem("Table Cell"))
+        self.pos2tab.horizontalHeader().setVisible(False)
+        self.pos2tab.verticalHeader().setVisible(False)
+
+        self.position_tabs = QtWidgets.QTabWidget()
+        self.position_tabs.addTab(self.postab,"Position 1")
+        self.position_tabs.addTab(self.pos2tab,"Position 2")
+        layout.addWidget(self.position_tabs)
         # Decimal degree
         #declayout = QtWidgets.QGridLayout(self)
         #declayout.addWidget(QtWidgets.QLabel('Dec. Latitude'),0,0)
@@ -66,62 +84,67 @@ class latlonWidget(QtWidgets.QWidget):
         #declayout.addWidget(self.dlon,1,1)
         #layout.addLayout(declayout)
     def update_position(self,latlon):
-        self.latlon = latlon
-        dlonstr = '{:3.5f}'.format(abs(self.latlon.lon))
-        dlatstr = '{:2.5f}'.format(abs(self.latlon.lat))
-        lonstr = '{:3d}'.format(self.latlon.degrees_lon)
-        latstr = '{:2d}'.format(self.latlon.degrees_lat)
-        dmlonstr = '{:02.3f}'.format(self.latlon.dminutes_lon)
-        dmlatstr = '{:02.3f}'.format(self.latlon.dminutes_lat)
-        mlonstr = '{:02d}'.format(self.latlon.minutes_lon)
-        mlatstr = '{:02d}'.format(self.latlon.minutes_lat)
-        slonstr = '{:02.3f}'.format(self.latlon.seconds_lon)
-        slatstr = '{:02.3f}'.format(self.latlon.seconds_lat)
-        print(self.latlon)
+        position_table = self.position_tabs.currentWidget() # Get the current table
+        if(position_table == self.postab):
+            self.latlon = latlon
+        elif(position_table == self.pos2tab):
+            self.latlon2 = latlon
+
+        dlonstr = '{:3.5f}'.format(abs(latlon.lon))
+        dlatstr = '{:2.5f}'.format(abs(latlon.lat))
+        lonstr = '{:3d}'.format(latlon.degrees_lon)
+        latstr = '{:2d}'.format(latlon.degrees_lat)
+        dmlonstr = '{:02.3f}'.format(latlon.dminutes_lon)
+        dmlatstr = '{:02.3f}'.format(latlon.dminutes_lat)
+        mlonstr = '{:02d}'.format(latlon.minutes_lon)
+        mlatstr = '{:02d}'.format(latlon.minutes_lat)
+        slonstr = '{:02.3f}'.format(latlon.seconds_lon)
+        slatstr = '{:02.3f}'.format(latlon.seconds_lat)
+        print(latlon)
         print(slonstr)
-        print('slon',self.latlon.seconds_lon)
-        print('slat',self.latlon.seconds_lat)
+        print('slon',latlon.seconds_lon)
+        print('slat',latlon.seconds_lat)
         # decimal degree
-        self.postab.setItem(0,0, QtWidgets.QTableWidgetItem('Lat [Dec. deg]'))
-        self.postab.setItem(1,0, QtWidgets.QTableWidgetItem(dlatstr))
-        self.postab.setItem(0,1, QtWidgets.QTableWidgetItem('Northing'))
-        self.postab.setItem(1,1, QtWidgets.QTableWidgetItem(self.latlon.northing))
-        self.postab.setItem(0,2, QtWidgets.QTableWidgetItem('Lon [Dec. deg]'))
-        self.postab.setItem(1,2, QtWidgets.QTableWidgetItem(dlonstr))
-        self.postab.setItem(0,3, QtWidgets.QTableWidgetItem('Easting'))
-        self.postab.setItem(1,3, QtWidgets.QTableWidgetItem(self.latlon.easting))
+        position_table.setItem(0,0, QtWidgets.QTableWidgetItem('Lat [Dec. deg]'))
+        position_table.setItem(1,0, QtWidgets.QTableWidgetItem(dlatstr))
+        position_table.setItem(0,1, QtWidgets.QTableWidgetItem('Northing'))
+        position_table.setItem(1,1, QtWidgets.QTableWidgetItem(latlon.northing))
+        position_table.setItem(0,2, QtWidgets.QTableWidgetItem('Lon [Dec. deg]'))
+        position_table.setItem(1,2, QtWidgets.QTableWidgetItem(dlonstr))
+        position_table.setItem(0,3, QtWidgets.QTableWidgetItem('Easting'))
+        position_table.setItem(1,3, QtWidgets.QTableWidgetItem(latlon.easting))
         # degree decimal minutes
-        self.postab.setItem(2,0, QtWidgets.QTableWidgetItem('Lat [Deg]'))
-        self.postab.setItem(3,0, QtWidgets.QTableWidgetItem(latstr))
-        self.postab.setItem(2,1, QtWidgets.QTableWidgetItem('Lat [Dec. min.]'))
-        self.postab.setItem(3,1, QtWidgets.QTableWidgetItem(dmlatstr))
-        self.postab.setItem(2,2, QtWidgets.QTableWidgetItem('Northing'))
-        self.postab.setItem(3,2, QtWidgets.QTableWidgetItem(self.latlon.northing))
-        self.postab.setItem(2,3, QtWidgets.QTableWidgetItem('Lon [Deg]'))
-        self.postab.setItem(3,3, QtWidgets.QTableWidgetItem(lonstr))
-        self.postab.setItem(2,4, QtWidgets.QTableWidgetItem('Lon [Dec. min.]'))
-        self.postab.setItem(3,4, QtWidgets.QTableWidgetItem(dmlonstr))
-        self.postab.setItem(2,5, QtWidgets.QTableWidgetItem('Easting'))
-        self.postab.setItem(3,5, QtWidgets.QTableWidgetItem(self.latlon.easting))
+        position_table.setItem(2,0, QtWidgets.QTableWidgetItem('Lat [Deg]'))
+        position_table.setItem(3,0, QtWidgets.QTableWidgetItem(latstr))
+        position_table.setItem(2,1, QtWidgets.QTableWidgetItem('Lat [Dec. min.]'))
+        position_table.setItem(3,1, QtWidgets.QTableWidgetItem(dmlatstr))
+        position_table.setItem(2,2, QtWidgets.QTableWidgetItem('Northing'))
+        position_table.setItem(3,2, QtWidgets.QTableWidgetItem(latlon.northing))
+        position_table.setItem(2,3, QtWidgets.QTableWidgetItem('Lon [Deg]'))
+        position_table.setItem(3,3, QtWidgets.QTableWidgetItem(lonstr))
+        position_table.setItem(2,4, QtWidgets.QTableWidgetItem('Lon [Dec. min.]'))
+        position_table.setItem(3,4, QtWidgets.QTableWidgetItem(dmlonstr))
+        position_table.setItem(2,5, QtWidgets.QTableWidgetItem('Easting'))
+        position_table.setItem(3,5, QtWidgets.QTableWidgetItem(latlon.easting))
         # degree minutes seconds
-        self.postab.setItem(4,0, QtWidgets.QTableWidgetItem('Lat [Deg]'))
-        self.postab.setItem(5,0, QtWidgets.QTableWidgetItem(latstr))
-        self.postab.setItem(4,1, QtWidgets.QTableWidgetItem('Lat [Min.]'))
-        self.postab.setItem(5,1, QtWidgets.QTableWidgetItem(mlatstr))
-        self.postab.setItem(4,2, QtWidgets.QTableWidgetItem('Lat [Sec.]'))
-        self.postab.setItem(5,2, QtWidgets.QTableWidgetItem(slatstr))
-        self.postab.setItem(4,3, QtWidgets.QTableWidgetItem('Northing'))
-        self.postab.setItem(5,3, QtWidgets.QTableWidgetItem(self.latlon.northing))
-        self.postab.setItem(4,4, QtWidgets.QTableWidgetItem('Lon [Deg]'))
-        self.postab.setItem(5,4, QtWidgets.QTableWidgetItem(lonstr))
-        self.postab.setItem(4,5, QtWidgets.QTableWidgetItem('Lon [Min.]'))
-        self.postab.setItem(5,5, QtWidgets.QTableWidgetItem(mlonstr))
-        self.postab.setItem(4,6, QtWidgets.QTableWidgetItem('Lon [Sec.]'))
-        self.postab.setItem(5,6, QtWidgets.QTableWidgetItem(slonstr))
-        self.postab.setItem(4,7, QtWidgets.QTableWidgetItem('Easting'))
-        self.postab.setItem(5,7, QtWidgets.QTableWidgetItem(self.latlon.easting))
+        position_table.setItem(4,0, QtWidgets.QTableWidgetItem('Lat [Deg]'))
+        position_table.setItem(5,0, QtWidgets.QTableWidgetItem(latstr))
+        position_table.setItem(4,1, QtWidgets.QTableWidgetItem('Lat [Min.]'))
+        position_table.setItem(5,1, QtWidgets.QTableWidgetItem(mlatstr))
+        position_table.setItem(4,2, QtWidgets.QTableWidgetItem('Lat [Sec.]'))
+        position_table.setItem(5,2, QtWidgets.QTableWidgetItem(slatstr))
+        position_table.setItem(4,3, QtWidgets.QTableWidgetItem('Northing'))
+        position_table.setItem(5,3, QtWidgets.QTableWidgetItem(latlon.northing))
+        position_table.setItem(4,4, QtWidgets.QTableWidgetItem('Lon [Deg]'))
+        position_table.setItem(5,4, QtWidgets.QTableWidgetItem(lonstr))
+        position_table.setItem(4,5, QtWidgets.QTableWidgetItem('Lon [Min.]'))
+        position_table.setItem(5,5, QtWidgets.QTableWidgetItem(mlonstr))
+        position_table.setItem(4,6, QtWidgets.QTableWidgetItem('Lon [Sec.]'))
+        position_table.setItem(5,6, QtWidgets.QTableWidgetItem(slonstr))
+        position_table.setItem(4,7, QtWidgets.QTableWidgetItem('Easting'))
+        position_table.setItem(5,7, QtWidgets.QTableWidgetItem(latlon.easting))
         # Resize
-        self.postab.resizeColumnsToContents()
+        position_table.resizeColumnsToContents()
 class pylatlonWidget(QtWidgets.QWidget):
     def __init__(self,logging_level=logging.INFO):
         QtWidgets.QWidget.__init__(self)
@@ -207,14 +230,32 @@ class pylatlonWidget(QtWidgets.QWidget):
         if(format == 'Custom'):
             return
 
-
         parse_string = self.input1.text()
         print('Parsing:' + parse_string + ' with format' + format)
         pos = pylatlon.latlon.strp(parse_string,format)
         self.latlon1.update_position(pos)
-        if(pos is not None):
-            self.map.plot(pos.lon,pos.lat)
-            self.map.draw()
+        # Plotting the positions
+        try:
+            lon1 = self.latlon1.latlon.lon
+            lat1 = self.latlon1.latlon.lat
+        except Exception as e:
+            print('Position1 error:' + str(e))
+            lon1 = None
+            lat1 = None
+        try:
+            lon2 = self.latlon1.latlon2.lon
+            lat2 = self.latlon1.latlon2.lat
+        except Exception as e:
+            print('Position2 error:' + str(e))
+            lon2 = None
+            lat2 = None
+
+        self.map.plot(lon1,lat1,lon2,lat2)
+
+        self.map.draw()
+        #if(pos is not None):
+        #   self.map.plot(pos.lon,pos.lat)
+
 
 
 class pylatlonMainWindow(QtWidgets.QMainWindow):
